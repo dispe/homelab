@@ -1,0 +1,44 @@
+version: '3'
+services:
+  gitlab:
+    image: 'gitlab/gitlab-ce:latest'
+    container_name: 'gitlab'
+    hostname: 'gitlab.localhost'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://gitlab.localhost'
+        nginx['redirect_http_to_https'] = false
+        nginx['listen_port'] = 80
+        nginx['listen_https'] = false
+    ports:
+      - '38080:80'
+      - '22:22'
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.gitlab-http.entrypoints=http'
+      - 'traefik.http.routers.gitlab-http.rule=Host(`gitlab.localhost`)'
+      - 'traefik.http.routers.gitlab-http.service=gitlab'
+      - 'traefik.http.services.gitlab.loadbalancer.server.port=80'
+
+      - 'traefik.tcp.routers.gitlab-ssh.entrypoints=ssh'
+      - 'traefik.tcp.routers.gitlab-ssh.rule=Host(`gitlab.localhost`)'
+      - 'traefik.tcp.routers.gitlab-ssh.service=gitlab'
+      - 'traefik.tcp.services.gitlab.loadbalancer.server.port=22'
+
+    volumes:
+      - 'gitlab_config:/etc/gitlab'
+      - 'gitlab_logs:/var/log/gitlab'
+      - 'gitlab_data:/var/opt/gitlab'
+    shm_size: '256m'
+    networks:
+      - homelab
+    restart: always
+
+volumes:
+  gitlab_config:
+  gitlab_logs:
+  gitlab_data:
+
+networks:
+  homelab:
+    external: true
