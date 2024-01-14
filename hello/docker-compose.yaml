@@ -1,0 +1,20 @@
+version: '3'
+name: hello
+
+services:
+  hello:
+    image: nginx:latest
+    container_name: hello
+    ports:
+      - 32080:80
+    networks:
+      - homelab
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.hello.entrypoints=http"
+      - "traefik.http.routers.hello.rule=Host(`hello.localhost`)"
+
+networks:
+  homelab:
+    external: true
